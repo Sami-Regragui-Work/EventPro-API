@@ -1,3 +1,20 @@
+app:
+  database:
+    port: 5432
+    name: ${DB_NAME:epa_db}
+    url-prefix: jdbc:postgresql://${app.database.host}:${app.database.port}/
+    auto-create: false
+
 spring:
-  application:
-    name: eventpro_api
+  profiles:
+    default: local
+
+  datasource:
+    url: "${app.database.url-prefix}${app.database.name}"
+    username: "${DB_USERNAME:postgres}"
+    password: "${DB_PASSWORD:}"
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
