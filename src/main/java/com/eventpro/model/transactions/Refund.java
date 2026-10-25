@@ -1,0 +1,32 @@
+package com.eventpro.model.transactions;
+
+import com.eventpro.model.enums.RefundStatus;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+
+@Entity @Table(name = "refunds")
+@Builder @AllArgsConstructor
+@Getter @Setter @NoArgsConstructor
+public class Refund {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private BigDecimal amount;
+    private String reason;
+
+    @CreationTimestamp
+    @Column(nullable = false)
+    private Instant requestDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RefundStatus status;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    private Payment payment;
+}
