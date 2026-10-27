@@ -1,5 +1,6 @@
 package com.eventpro.model;
 
+import com.eventpro.exception.events.IllegalEventStateException;
 import com.eventpro.model.enums.EventStatus;
 import com.eventpro.model.tickets.TicketCategoriesPerEvent;
 import com.eventpro.model.transactions.Promotion;
@@ -37,7 +38,9 @@ public class Event {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private EventStatus status;
+    @Setter(AccessLevel.NONE)
+    @Builder.Default
+    private EventStatus status = EventStatus.DRAFT;
 
     @Column(nullable = false)
     private int capacity;
@@ -51,4 +54,24 @@ public class Event {
 
     @OneToMany(mappedBy = "event")
     private List<Promotion> promotions;
+
+    public void assertCanTransitionTo(EventStatus desiredStatus) {
+        if (!this.status.canTransitionTo(desiredStatus)) {
+            throw new IllegalEventStateException(this.status.toString(), desiredStatus.toString());
+        }
+    }
+
+    public void transitionTo(EventStatus desiredStatus) {
+        this.assertCanTransitionTo(desiredStatus);
+        this.status = desiredStatus;
+    }
+
+    public boolean isDraft() {
+        return this.status.equals(EventStatus.DRAFT);
+    }
+
+    public void requireModifiable() {
+        if (!this.status.canBeEdited())
+            throw new IllegalEventStateException("Event is " + this.status + " and cannot be edited");
+    }
 }

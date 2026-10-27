@@ -1,9 +1,11 @@
 package com.eventpro.advice;
 
 import com.eventpro.dto.response.ErrorResponse;
+import com.eventpro.exception.BaseException;
 import com.eventpro.exception.ResourceNotFoundException;
 import com.eventpro.exception.SystemException;
 import com.eventpro.exception.ValidationException;
+import com.eventpro.exception.events.IllegalEventStateException;
 import com.eventpro.exception.reservations.InsufficientStockException;
 import com.eventpro.exception.reservations.ReservationExpiredException;
 import com.eventpro.exception.tickets.TicketAlreadyUsedException;
@@ -73,6 +75,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(IdempotencyConflictException.class) // 409
     public ResponseEntity<ErrorResponse> handleIdempotencyConflict(IdempotencyConflictException e, HttpServletRequest req) {
+        return this.buildResponseEntity(HttpStatus.CONFLICT, e.getMessage(), req);
+    }
+
+    @ExceptionHandler(IllegalEventStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalEventState(IllegalEventStateException e, HttpServletRequest req) {
         return this.buildResponseEntity(HttpStatus.CONFLICT, e.getMessage(), req);
     }
 
