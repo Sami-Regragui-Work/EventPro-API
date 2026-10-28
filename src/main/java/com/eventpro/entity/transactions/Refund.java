@@ -1,6 +1,6 @@
-package com.eventpro.model.transactions;
+package com.eventpro.entity.transactions;
 
-import com.eventpro.model.enums.RefundStatus;
+import com.eventpro.domain.enums.RefundStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

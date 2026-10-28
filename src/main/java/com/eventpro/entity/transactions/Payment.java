@@ -1,7 +1,7 @@
-package com.eventpro.model.transactions;
+package com.eventpro.entity.transactions;
 
-import com.eventpro.model.enums.PaymentStatus;
-import com.eventpro.model.reservations.Reservation;
+import com.eventpro.domain.enums.PaymentStatus;
+import com.eventpro.entity.reservations.Reservation;
 import jakarta.persistence.*;
 import lombok.*;
 

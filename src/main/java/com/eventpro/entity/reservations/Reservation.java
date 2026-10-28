@@ -1,9 +1,9 @@
-package com.eventpro.model.reservations;
+package com.eventpro.entity.reservations;
 
-import com.eventpro.model.enums.ReservationStatus;
-import com.eventpro.model.transactions.Payment;
-import com.eventpro.model.transactions.Promotion;
-import com.eventpro.model.users.Client;
+import com.eventpro.domain.enums.ReservationStatus;
+import com.eventpro.entity.transactions.Payment;
+import com.eventpro.entity.transactions.Promotion;
+import com.eventpro.entity.users.Client;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

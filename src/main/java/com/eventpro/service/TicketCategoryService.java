@@ -1,6 +1,6 @@
 package com.eventpro.service;
 
-import com.eventpro.model.tickets.TicketCategory;
+import com.eventpro.entity.tickets.TicketCategory;
 import com.eventpro.repository.TicketCategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;

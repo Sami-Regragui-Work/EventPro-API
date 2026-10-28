@@ -1,6 +1,6 @@
-package com.eventpro.model.users;
+package com.eventpro.entity.users;
 
-import com.eventpro.model.Event;
+import com.eventpro.entity.Event;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;

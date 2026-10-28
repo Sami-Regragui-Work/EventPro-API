@@ -1,6 +1,6 @@
-package com.eventpro.model.users;
+package com.eventpro.entity.users;
 
-import com.eventpro.model.reservations.Reservation;
+import com.eventpro.entity.reservations.Reservation;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;

@@ -1,9 +1,9 @@
 package com.eventpro.service;
 
 import com.eventpro.exception.ResourceNotFoundException;
-import com.eventpro.model.users.Client;
-import com.eventpro.model.users.Organizer;
-import com.eventpro.model.users.User;
+import com.eventpro.entity.users.Client;
+import com.eventpro.entity.users.Organizer;
+import com.eventpro.entity.users.User;
 import com.eventpro.repository.ClientRepository;
 import com.eventpro.repository.OrganizerRepository;
 import com.eventpro.repository.UserRepository;

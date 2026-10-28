@@ -1,4 +1,4 @@
-package com.eventpro.model.users;
+package com.eventpro.entity.users;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;

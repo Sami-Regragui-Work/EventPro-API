@@ -3,7 +3,7 @@ package com.eventpro.mapper;
 import com.eventpro.dto.response.users.ClientResponse;
 import com.eventpro.dto.response.users.OrganizerResponse;
 import com.eventpro.dto.response.users.UserSummaryResponse;
-import com.eventpro.model.users.*;
+import com.eventpro.entity.users.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;

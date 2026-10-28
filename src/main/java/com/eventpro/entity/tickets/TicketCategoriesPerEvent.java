@@ -1,7 +1,7 @@
-package com.eventpro.model.tickets;
+package com.eventpro.entity.tickets;
 
-import com.eventpro.model.Event;
-import com.eventpro.model.reservations.ReservationLine;
+import com.eventpro.entity.Event;
+import com.eventpro.entity.reservations.ReservationLine;
 import jakarta.persistence.*;
 import lombok.*;
 

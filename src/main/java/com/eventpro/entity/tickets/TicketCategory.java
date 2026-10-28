@@ -1,4 +1,4 @@
-package com.eventpro.model.tickets;
+package com.eventpro.entity.tickets;
 
 import jakarta.persistence.*;
 import lombok.*;

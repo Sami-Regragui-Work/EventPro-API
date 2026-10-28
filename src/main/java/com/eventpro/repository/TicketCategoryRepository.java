@@ -1,6 +1,6 @@
 package com.eventpro.repository;
 
-import com.eventpro.model.tickets.TicketCategory;
+import com.eventpro.entity.tickets.TicketCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

@@ -1,8 +1,8 @@
-package com.eventpro.model.transactions;
+package com.eventpro.entity.transactions;
 
-import com.eventpro.model.Event;
-import com.eventpro.model.enums.DiscountType;
-import com.eventpro.model.reservations.Reservation;
+import com.eventpro.entity.Event;
+import com.eventpro.domain.enums.DiscountType;
+import com.eventpro.entity.reservations.Reservation;
 import jakarta.persistence.*;
 import lombok.*;
 

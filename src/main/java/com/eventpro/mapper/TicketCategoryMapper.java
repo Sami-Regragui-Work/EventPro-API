@@ -1,7 +1,7 @@
 package com.eventpro.mapper;
 
 import com.eventpro.dto.response.TicketCategoryResponse;
-import com.eventpro.model.tickets.TicketCategory;
+import com.eventpro.entity.tickets.TicketCategory;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 

@@ -1,10 +1,10 @@
-package com.eventpro.model;
+package com.eventpro.entity;
 
 import com.eventpro.exception.events.IllegalEventStateException;
-import com.eventpro.model.enums.EventStatus;
-import com.eventpro.model.tickets.TicketCategoriesPerEvent;
-import com.eventpro.model.transactions.Promotion;
-import com.eventpro.model.users.Organizer;
+import com.eventpro.domain.enums.EventStatus;
+import com.eventpro.entity.tickets.TicketCategoriesPerEvent;
+import com.eventpro.entity.transactions.Promotion;
+import com.eventpro.entity.users.Organizer;
 import jakarta.persistence.*;
 import lombok.*;
 
