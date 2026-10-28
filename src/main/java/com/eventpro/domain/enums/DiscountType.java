@@ -1,4 +1,4 @@
-package com.eventpro.model.enums;
+package com.eventpro.domain.enums;
 
 public enum DiscountType {
     PERCENTAGE,
