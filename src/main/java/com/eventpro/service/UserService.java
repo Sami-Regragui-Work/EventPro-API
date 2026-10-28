@@ -1,6 +1,6 @@
 package com.eventpro.service;
 
-import com.eventpro.exception.ResourceNotFoundException;
+import com.eventpro.exception.notfound.ResourceNotFoundException;
 import com.eventpro.entity.users.Client;
 import com.eventpro.entity.users.Organizer;
 import com.eventpro.entity.users.User;

@@ -1,8 +1,6 @@
-package com.eventpro.exception.reservations;
+package com.eventpro.exception.conflict;
 
-import com.eventpro.exception.BaseException;
-
-public class InsufficientStockException extends BaseException {
+public class InsufficientStockException extends ConflictException {
     public InsufficientStockException(String message) {
         super(message);
     }

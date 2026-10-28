@@ -1,8 +1,6 @@
-package com.eventpro.exception.tickets;
+package com.eventpro.exception.conflict;
 
-import com.eventpro.exception.BaseException;
-
-public class TicketAlreadyUsedException extends BaseException {
+public class TicketAlreadyUsedException extends ConflictException {
     public TicketAlreadyUsedException(String message) {
         super(message);
     }

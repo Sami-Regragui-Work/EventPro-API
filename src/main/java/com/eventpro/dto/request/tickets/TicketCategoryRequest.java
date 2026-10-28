@@ -1,4 +1,4 @@
-package com.eventpro.dto.request;
+package com.eventpro.dto.request.tickets;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

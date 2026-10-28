@@ -5,7 +5,7 @@ import com.eventpro.dto.request.events.UpdateEventRequest;
 import com.eventpro.dto.response.PageResponse;
 import com.eventpro.dto.response.events.EventResponse;
 import com.eventpro.entity.Event;
-import com.eventpro.exception.ValidationException;
+import com.eventpro.exception.badrequest.ValidationException;
 import com.eventpro.mapper.EventMapper;
 import com.eventpro.service.EventService;
 import jakarta.validation.Valid;

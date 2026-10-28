@@ -1,8 +1,6 @@
-package com.eventpro.exception.reservations;
+package com.eventpro.exception.conflict;
 
-import com.eventpro.exception.BaseException;
-
-public class ReservationExpiredException extends BaseException {
+public class ReservationExpiredException extends ConflictException {
     public ReservationExpiredException(String message) {
         super(message);
     }

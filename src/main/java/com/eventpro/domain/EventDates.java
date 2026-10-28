@@ -1,6 +1,6 @@
 package com.eventpro.domain;
 
-import com.eventpro.exception.ValidationException;
+import com.eventpro.exception.badrequest.ValidationException;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 

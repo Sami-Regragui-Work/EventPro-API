@@ -1,6 +1,6 @@
 package com.eventpro.entity;
 
-import com.eventpro.exception.events.IllegalEventStateException;
+import com.eventpro.exception.conflict.IllegalEventStateException;
 import com.eventpro.domain.enums.EventStatus;
 import com.eventpro.entity.tickets.TicketCategoriesPerEvent;
 import com.eventpro.entity.transactions.Promotion;
@@ -57,7 +57,7 @@ public class Event {
 
     public void assertCanTransitionTo(EventStatus desiredStatus) {
         if (!this.status.canTransitionTo(desiredStatus)) {
-            throw new IllegalEventStateException(this.status.toString(), desiredStatus.toString());
+            throw new IllegalEventStateException("Cannot change event from %s to %s".formatted(this.status, desiredStatus));
         }
     }
 

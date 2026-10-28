@@ -1,4 +1,4 @@
-package com.eventpro.exception;
+package com.eventpro.exception.badrequest;
 
 import org.jspecify.annotations.NonNull;
 import org.springframework.core.MethodParameter;
@@ -16,6 +16,10 @@ public class ValidationException extends MethodArgumentNotValidException {
 
     public ValidationException(String message) {
         this(message, new BeanPropertyBindingResult(new Object(), "request"));
+    }
+
+    public ValidationException() {
+        this("Validation failed", new BeanPropertyBindingResult(new Object(), "request"));
     }
 
 

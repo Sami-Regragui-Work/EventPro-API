@@ -1,15 +1,10 @@
 package com.eventpro.advice;
 
 import com.eventpro.dto.response.ErrorResponse;
-import com.eventpro.exception.BaseException;
-import com.eventpro.exception.ResourceNotFoundException;
-import com.eventpro.exception.SystemException;
-import com.eventpro.exception.ValidationException;
-import com.eventpro.exception.events.IllegalEventStateException;
-import com.eventpro.exception.reservations.InsufficientStockException;
-import com.eventpro.exception.reservations.ReservationExpiredException;
-import com.eventpro.exception.tickets.TicketAlreadyUsedException;
-import com.eventpro.exception.transactions.IdempotencyConflictException;
+import com.eventpro.exception.conflict.*;
+import com.eventpro.exception.internalservererror.InternalServerErrorException;
+import com.eventpro.exception.notfound.NotFoundException;
+import com.eventpro.exception.badrequest.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -53,42 +48,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         );
     }
 
-    @ExceptionHandler(ResourceNotFoundException.class) // 404
-    public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException e, HttpServletRequest req) {
+    @ExceptionHandler(NotFoundException.class) // 404
+    public ResponseEntity<ErrorResponse> handleNotFound(NotFoundException e, HttpServletRequest req) {
         return this.buildResponseEntity(HttpStatus.NOT_FOUND, e.getMessage(), req);
     }
 
-    @ExceptionHandler(InsufficientStockException.class) // 409
-    public ResponseEntity<ErrorResponse> handleInsufficientStock(InsufficientStockException e, HttpServletRequest req) {
+    @ExceptionHandler(ConflictException.class) // 409
+    public ResponseEntity<ErrorResponse> handleConflict(ConflictException e, HttpServletRequest req) {
         return this.buildResponseEntity(HttpStatus.CONFLICT, e.getMessage(), req);
     }
 
-    @ExceptionHandler(ReservationExpiredException.class) // 409
-    public ResponseEntity<ErrorResponse> handleReservationExpired(ReservationExpiredException e, HttpServletRequest req) {
-        return this.buildResponseEntity(HttpStatus.CONFLICT, e.getMessage(), req);
-    }
-
-    @ExceptionHandler(TicketAlreadyUsedException.class) // 409
-    public ResponseEntity<ErrorResponse> handleTicketAlreadyUsed(TicketAlreadyUsedException e, HttpServletRequest req) {
-        return this.buildResponseEntity(HttpStatus.CONFLICT, e.getMessage(), req);
-    }
-
-    @ExceptionHandler(IdempotencyConflictException.class) // 409
-    public ResponseEntity<ErrorResponse> handleIdempotencyConflict(IdempotencyConflictException e, HttpServletRequest req) {
-        return this.buildResponseEntity(HttpStatus.CONFLICT, e.getMessage(), req);
-    }
-
-    @ExceptionHandler(IllegalEventStateException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalEventState(IllegalEventStateException e, HttpServletRequest req) {
-        return this.buildResponseEntity(HttpStatus.CONFLICT, e.getMessage(), req);
-    }
-
-    private ResponseEntity<ErrorResponse> buildResponseEntity(HttpStatus status, String message, HttpServletRequest req) {
-        return ResponseEntity.status(status).body(this.buildErrorResponse(status, message, req));
-    }
-
-    @ExceptionHandler(SystemException.class) // 500
-    public ResponseEntity<ErrorResponse> handleSystem(SystemException e, HttpServletRequest req) {
+    @ExceptionHandler(InternalServerErrorException.class) // 500
+    public ResponseEntity<ErrorResponse> handleSystem(InternalServerErrorException e, HttpServletRequest req) {
         log.error("System failure on {}", req.getRequestURI(), e);
         return this.buildResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error", req);
     }
@@ -97,6 +68,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception e, HttpServletRequest req) {
         log.error("Unhandled exception on {}", req.getRequestURI(), e);
         return this.buildResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error", req);
+    }
+
+    private ResponseEntity<ErrorResponse> buildResponseEntity(HttpStatus status, String message, HttpServletRequest req) {
+        return ResponseEntity.status(status).body(this.buildErrorResponse(status, message, req));
     }
 
     private ErrorResponse buildErrorResponse(HttpStatus status, String message, HttpServletRequest req) {

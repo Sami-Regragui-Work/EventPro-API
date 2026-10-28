@@ -4,9 +4,9 @@ import com.eventpro.domain.EventDates;
 import com.eventpro.domain.enums.EventStatus;
 import com.eventpro.dto.request.events.CreateEventRequest;
 import com.eventpro.dto.request.events.UpdateEventRequest;
-import com.eventpro.exception.ResourceNotFoundException;
-import com.eventpro.exception.ValidationException;
-import com.eventpro.exception.events.IllegalEventStateException;
+import com.eventpro.exception.notfound.ResourceNotFoundException;
+import com.eventpro.exception.badrequest.ValidationException;
+import com.eventpro.exception.conflict.IllegalEventStateException;
 import com.eventpro.mapper.EventMapper;
 import com.eventpro.entity.Event;
 import com.eventpro.entity.users.Organizer;
@@ -30,7 +30,7 @@ public class EventService {
     private final OrganizerRepository organizerRepository;
     private final EventMapper mapper;
 
-    public Event create(Long organizerId, CreateEventRequest dto) throws ValidationException, ResourceNotFoundException {
+    public Event create(Long organizerId, CreateEventRequest dto) throws ValidationException {
         Organizer organizer = this.organizerRepository.findById(organizerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Organizer " + organizerId + " not found"));
 
@@ -41,7 +41,7 @@ public class EventService {
         return this.eventRepository.save(event);
     }
 
-    public Event update(Long organizerId, Long eventId, UpdateEventRequest dto) throws ValidationException, IllegalEventStateException {
+    public Event update(Long organizerId, Long eventId, UpdateEventRequest dto) throws ValidationException {
         Event event = this.ownedEvent(organizerId, eventId);
         event.requireModifiable();
 
@@ -90,7 +90,7 @@ public class EventService {
         return this.eventRepository.findByOrganizerId(organizerId, pageable);
     }
 
-    private Event ownedEvent(Long organizerId, Long eventId) throws ResourceNotFoundException {
+    private Event ownedEvent(Long organizerId, Long eventId) {
         Event event = this.eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event " + eventId + " not found"));
         if (!event.getOrganizer().getId().equals(organizerId)) {
