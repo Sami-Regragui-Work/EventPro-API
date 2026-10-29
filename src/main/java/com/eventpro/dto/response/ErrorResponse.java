@@ -21,14 +21,6 @@ public class ErrorResponse {
     private final String message;
     private final String path;
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<String, String> fieldErrors;
-
-    public ErrorResponse(int status, String error, String message, String path) {
-        this.timestamp = Instant.now();
-        this.status = status;
-        this.error = error;
-        this.message = message;
-        this.path = path;
-    }
 }

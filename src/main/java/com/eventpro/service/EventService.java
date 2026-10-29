@@ -11,6 +11,7 @@ import com.eventpro.mapper.EventMapper;
 import com.eventpro.entity.Event;
 import com.eventpro.entity.users.Organizer;
 import com.eventpro.repository.EventRepository;
+import com.eventpro.repository.EventTicketCategoryRepository;
 import com.eventpro.repository.OrganizerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +30,7 @@ import java.util.List;
 public class EventService {
     private final EventRepository eventRepository;
     private final OrganizerRepository organizerRepository;
+    private final EventTicketCategoryRepository eventTicketCategoryRepository;
     private final EventMapper mapper;
 
     public Event create(Long organizerId, CreateEventRequest dto) throws ValidationException {
@@ -42,7 +45,7 @@ public class EventService {
     }
 
     public Event update(Long organizerId, Long eventId, UpdateEventRequest dto) throws ValidationException {
-        Event event = this.ownedEvent(organizerId, eventId);
+        Event event = this.lockOwnedEvent(organizerId, eventId);
         event.requireModifiable();
 
         if (!event.isDraft()) {
@@ -60,16 +63,20 @@ public class EventService {
     }
 
     public Event publish(Long organizerId, Long eventId) {
-        Event event = this.ownedEvent(organizerId, eventId);
+        Event event = this.lockOwnedEvent(organizerId, eventId);
         event.assertCanTransitionTo(EventStatus.PUBLISHED);
         if (!event.getSalesClosingDate().isAfter(Instant.now()))
             throw new IllegalEventStateException("Sales have already closed");
+
+        if (this.eventTicketCategoryRepository.countByEventId(eventId) == 0)
+            throw new IllegalEventStateException("Publish requires at least one ticket category");
+
         event.transitionTo(EventStatus.PUBLISHED);
         return event;
     }
 
     public Event cancel(Long organizerId, Long eventId) {
-        Event event = this.ownedEvent(organizerId, eventId);
+        Event event = this.lockOwnedEvent(organizerId, eventId);
         event.transitionTo(EventStatus.CANCELED);
         return event;
     }
@@ -90,9 +97,16 @@ public class EventService {
         return this.eventRepository.findByOrganizerId(organizerId, pageable);
     }
 
-    private Event ownedEvent(Long organizerId, Long eventId) {
-        Event event = this.eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResourceNotFoundException("Event " + eventId + " not found"));
+    public Event ownedEvent(Long organizerId, Long eventId) {
+        return EventService.checkOwner(organizerId, eventId, this.eventRepository.findById(eventId));
+    }
+
+    public Event lockOwnedEvent(Long organizerId, Long eventId) {
+        return EventService.checkOwner(organizerId, eventId, this.eventRepository.findWithLockById(eventId));
+    }
+
+    private static Event checkOwner(Long organizerId, Long eventId, Optional<Event> found) {
+        Event event = found.orElseThrow(() -> new ResourceNotFoundException("Event " + eventId + " not found"));
         if (!event.getOrganizer().getId().equals(organizerId)) {
             throw new ResourceNotFoundException("Event " + eventId + " not found");
         }

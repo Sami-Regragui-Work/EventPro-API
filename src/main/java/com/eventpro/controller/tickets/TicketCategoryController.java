@@ -1,7 +1,7 @@
-package com.eventpro.controller;
+package com.eventpro.controller.tickets;
 
-import com.eventpro.dto.request.TicketCategoryRequest;
-import com.eventpro.dto.response.TicketCategoryResponse;
+import com.eventpro.dto.request.tickets.TicketCategoryRequest;
+import com.eventpro.dto.response.tickets.TicketCategoryResponse;
 import com.eventpro.mapper.TicketCategoryMapper;
 import com.eventpro.service.TicketCategoryService;
 import jakarta.validation.Valid;
@@ -30,7 +30,7 @@ public class TicketCategoryController {
             )
     {
         TicketCategoryService.FindOrCreateTicketCategory result = this.service.findOrCreate(dto.getName());
-        TicketCategoryResponse body = this.mapper.toResponse(result.category());
+        TicketCategoryResponse body = this.mapper.toResponse(result.ticketCategory());
 
         return result.exist()
                 ? ResponseEntity.ok(body)

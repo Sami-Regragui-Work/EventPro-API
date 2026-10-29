@@ -1,4 +1,4 @@
-package com.eventpro.dto.response;
+package com.eventpro.dto.response.tickets;
 
 import lombok.Builder;
 import lombok.Getter;

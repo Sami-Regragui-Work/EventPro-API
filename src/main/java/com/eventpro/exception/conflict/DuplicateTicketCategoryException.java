@@ -6,6 +6,6 @@ public class DuplicateTicketCategoryException extends ConflictException {
     }
 
     public DuplicateTicketCategoryException() {
-        this("This category is already attached to the event");
+        this("This ticketCategory is already attached to the event");
     }
 }
