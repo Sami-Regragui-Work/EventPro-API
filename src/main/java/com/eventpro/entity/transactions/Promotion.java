@@ -22,10 +22,10 @@ public class Promotion {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private DiscountType type;
+    private DiscountType discountType;
 
     @Column(nullable = false)
-    private BigDecimal value;
+    private BigDecimal discountValue;
 
     @Column(nullable = false)
     private LocalDate startDate;
