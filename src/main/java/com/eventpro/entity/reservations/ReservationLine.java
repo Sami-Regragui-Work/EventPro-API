@@ -1,7 +1,7 @@
 package com.eventpro.entity.reservations;
 
 import com.eventpro.entity.tickets.Ticket;
-import com.eventpro.entity.tickets.TicketCategoriesPerEvent;
+import com.eventpro.entity.tickets.EventTicketCategory;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,7 +28,7 @@ public class ReservationLine {
     private Reservation reservation;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    private TicketCategoriesPerEvent category;
+    private EventTicketCategory eventTicketCategory;
 
     @OneToMany(mappedBy = "reservationLine")
     // don't forget to enforce at least 1

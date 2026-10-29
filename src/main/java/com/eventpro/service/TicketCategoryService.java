@@ -14,7 +14,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class TicketCategoryService {
-    public record FindOrCreateTicketCategory(TicketCategory category, boolean exist) {}
+    public record FindOrCreateTicketCategory(TicketCategory ticketCategory, boolean exist) {}
 
     private final TicketCategoryRepository repository;
     private final TransactionTemplate transactions;
@@ -35,7 +35,7 @@ public class TicketCategoryService {
     private FindOrCreateTicketCategory lookupOrInsert(String unnormalizedName) {
         String name = TicketCategory.normalize(unnormalizedName);
         return this.repository.findByName(name)
-                .map(category -> new FindOrCreateTicketCategory(category, true))
+                .map(ticketCategory -> new FindOrCreateTicketCategory(ticketCategory, true))
                 .orElseGet(() -> new FindOrCreateTicketCategory(
                         this.repository.save(TicketCategory.builder().name(name).build()),
                         false

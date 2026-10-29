@@ -2,7 +2,7 @@ package com.eventpro.entity;
 
 import com.eventpro.exception.conflict.IllegalEventStateException;
 import com.eventpro.domain.enums.EventStatus;
-import com.eventpro.entity.tickets.TicketCategoriesPerEvent;
+import com.eventpro.entity.tickets.EventTicketCategory;
 import com.eventpro.entity.transactions.Promotion;
 import com.eventpro.entity.users.Organizer;
 import jakarta.persistence.*;
@@ -50,7 +50,7 @@ public class Event {
 
     @OneToMany(mappedBy = "event")
     // don't forget to enforce at least 1
-    private List<TicketCategoriesPerEvent> categories;
+    private List<EventTicketCategory> eventTicketCategories;
 
     @OneToMany(mappedBy = "event")
     private List<Promotion> promotions;

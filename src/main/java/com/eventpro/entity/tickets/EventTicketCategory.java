@@ -9,15 +9,15 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Entity @Table(
-        name = "ticket_categories_per_events",
+        name = "event_ticket_categories",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_event_category",
-                columnNames = {"event_id", "category_id"}
+                columnNames = {"event_id", "ticket_category_id"}
         )
 )
 @Builder @AllArgsConstructor
 @Getter @Setter @NoArgsConstructor
-public class TicketCategoriesPerEvent {
+public class EventTicketCategory {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -34,8 +34,8 @@ public class TicketCategoriesPerEvent {
     private Event event;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    private TicketCategory category;
+    private TicketCategory ticketCategory;
 
-    @OneToMany(mappedBy = "category")
+    @OneToMany(mappedBy = "eventTicketCategory")
     private List<ReservationLine> reservationLines;
 }
