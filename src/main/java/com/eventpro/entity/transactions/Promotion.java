@@ -7,10 +7,17 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 
-@Entity @Table(name = "promotions")
+@Entity @Table(
+        name = "promotions",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_event_code",
+                columnNames = {"event_id", "code"}
+        )
+)
 @Builder @AllArgsConstructor
 @Getter @Setter @NoArgsConstructor
 public class Promotion {
@@ -42,4 +49,17 @@ public class Promotion {
 
     @OneToMany(mappedBy = "promotion")
     private List<Reservation> reservations;
+
+    public boolean isUsableOn(LocalDate today) {
+        return !today.isBefore(this.startDate) && !today.isAfter(this.endDate) && this.usageCount < this.usageLimit;
+    }
+
+    public BigDecimal calculateDiscount(BigDecimal subtotal) {
+        BigDecimal rawDiscount = switch (this.discountType) {
+            case DiscountType.PERCENTAGE -> subtotal.multiply(this.discountValue)
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            case DiscountType.FIXED_AMOUNT -> this.discountValue;
+        };
+        return rawDiscount.min(subtotal);
+    }
 }
