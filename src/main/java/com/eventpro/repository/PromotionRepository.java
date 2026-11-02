@@ -15,5 +15,8 @@ public interface PromotionRepository extends JpaRepository<Promotion, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Promotion> findWithLockByEventIdAndCode(Long eventId, String code);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<Promotion> findWithLockById(Long id);
+
     boolean existsByEventIdAndCode(Long eventId, String code);
 }

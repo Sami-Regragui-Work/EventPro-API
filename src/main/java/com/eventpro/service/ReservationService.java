@@ -126,6 +126,23 @@ public class ReservationService {
         }
     }
 
+    public void expire(Long reservationId) {
+        Reservation reservation = this.reservationRepository.findWithLockById(reservationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reservation " + reservationId + " not found"));
+
+        if (!reservation.isExpiredAt(this.clock.instant()))
+            return;
+
+        reservation.transitionTo(ReservationStatus.EXPIRED);
+
+        Promotion appliedPromotion = reservation.getPromotion();
+        if (appliedPromotion != null) {
+            Promotion lockedPromotion = this.promotionRepository.findWithLockById(appliedPromotion.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Promotion " + appliedPromotion.getId() + " not found"));
+            lockedPromotion.releaseUsage();
+        }
+    }
+
     private void checkStock(EventTicketCategory eventTicketCategory, int requestedQuantity) {
         long reservationLinesQuantity = this.reservationLineRepository.sumQuantityByEventTicketCategoryIdAndReservationStatuses(eventTicketCategory.getId(), ReservationService.COMMITTED_STATUSES);
 
