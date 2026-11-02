@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 
 @Entity @Table(
         name = "promotions",
@@ -61,5 +62,17 @@ public class Promotion {
             case DiscountType.FIXED_AMOUNT -> this.discountValue;
         };
         return rawDiscount.min(subtotal);
+    }
+
+    public static String normalizeCode(String code) {
+        return code.trim().toUpperCase(Locale.ROOT);
+    }
+
+    public void recordUsage() {
+        this.usageCount++;
+    }
+
+    public void releaseUsage() {
+        this.usageCount--;
     }
 }

@@ -10,14 +10,28 @@ import java.util.Collection;
 
 public interface ReservationLineRepository extends JpaRepository<ReservationLine, Long> {
     boolean existsByEventTicketCategoryId(Long eventTicketCategoryId);
+
     @Query("""
             SELECT COALESCE(SUM(rl.quantity), 0)
             FROM ReservationLine rl
             WHERE rl.eventTicketCategory.id = :eventTicketCategoryId
             AND rl.reservation.status in :statuses
             """)
-    long sumQuantityByRowAndStatuses(
+    long sumQuantityByEventTicketCategoryIdAndReservationStatuses(
             @Param("eventTicketCategoryId") Long eventTicketCategoryId,
             @Param("statuses") Collection<ReservationStatus> statuses
             );
+
+    @Query("""
+            SELECT COALESCE(SUM(rl.quantity), 0)
+            FROM ReservationLine rl
+            WHERE rl.eventTicketCategory.id = :eventTicketCategoryId
+            AND rl.reservation.client.id = :clientId
+            AND rl.reservation.status IN :statuses
+            """)
+    long sumQuantityByEventTicketCategoryIdAndClientIdAndReservationStatuses(
+            @Param("eventTicketCategoryId") Long eventTicketCategoryId,
+            @Param("clientId") Long clientId,
+            @Param("statuses") Collection<ReservationStatus> statuses
+    );
 }

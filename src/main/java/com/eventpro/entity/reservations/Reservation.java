@@ -4,6 +4,7 @@ import com.eventpro.domain.enums.ReservationStatus;
 import com.eventpro.entity.transactions.Payment;
 import com.eventpro.entity.transactions.Promotion;
 import com.eventpro.entity.users.Client;
+import com.eventpro.exception.conflict.IllegalReservationStateException;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -31,7 +32,9 @@ public class Reservation {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ReservationStatus status;
+    @Setter(AccessLevel.NONE)
+    @Builder.Default
+    private ReservationStatus status = ReservationStatus.PENDING_PAYMENT;
 
     @Column(nullable = false)
     private BigDecimal totalAmount;
@@ -47,4 +50,19 @@ public class Reservation {
 
     @OneToOne(mappedBy = "reservation")
     private Payment payment;
+
+    public boolean isExpiredAt(Instant now) {
+        return this.status == ReservationStatus.PENDING_PAYMENT && !now.isBefore(this.expirationDate);
+    }
+
+    public void assertCanTransitionTo(ReservationStatus desiredStatus) {
+        if (!this.status.canTransitionTo(desiredStatus)) {
+            throw new IllegalReservationStateException("Cannot change reservation from %s to %s".formatted(this.status, desiredStatus));
+        }
+    }
+
+    public void transitionTo(ReservationStatus desiredStatus) {
+        this.assertCanTransitionTo(desiredStatus);
+        this.status = desiredStatus;
+    }
 }

@@ -91,10 +91,10 @@ public class EventTicketCategoryService {
         EventTicketCategoryService.checkQuota(newQuota, newAddedQuantity);
         this.checkCapacity(event, eventCategory.getTotalQuantity(), newAddedQuantity);
 
-        long committed_quantity = this.reservationLineRepository.sumQuantityByRowAndStatuses(eventCategoryId, EventTicketCategoryService.COMMITTED_STATUSES);
+        long committedQuantity = this.reservationLineRepository.sumQuantityByEventTicketCategoryIdAndReservationStatuses(eventCategoryId, EventTicketCategoryService.COMMITTED_STATUSES);
 
-        if (newAddedQuantity < committed_quantity)
-            throw new InsufficientStockException("Total quantity cannot be below the " + committed_quantity + " already reserved or sold");
+        if (newAddedQuantity < committedQuantity)
+            throw new InsufficientStockException("Total quantity cannot be below the " + committedQuantity + " already reserved or sold");
 
         this.mapper.updateEntity(dto, eventCategory);
 

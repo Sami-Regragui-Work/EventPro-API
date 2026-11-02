@@ -92,6 +92,14 @@ public class EventService {
                 .orElseThrow(() -> new ResourceNotFoundException("Event " + id + " not found"));
     }
 
+    public Event findWithLockPublicById(Long id) {
+        Event event = this.eventRepository.findWithLockById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Event " + id + " not found"));
+        if (event.getStatus() != EventStatus.PUBLISHED)
+            throw new ResourceNotFoundException("Event " + id + " not found");
+        return event;
+    }
+
     @Transactional(readOnly = true)
     public Page<Event> findByOrganizer(Long organizerId, Pageable pageable) {
         return this.eventRepository.findByOrganizerId(organizerId, pageable);
