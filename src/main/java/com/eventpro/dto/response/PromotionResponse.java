@@ -1,4 +1,4 @@
-package com.eventpro.dto.request.promotions;
+package com.eventpro.dto.response;
 
 import com.eventpro.domain.enums.DiscountType;
 import lombok.Builder;

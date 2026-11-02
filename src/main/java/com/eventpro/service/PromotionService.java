@@ -1,7 +1,7 @@
 package com.eventpro.service;
 
 import com.eventpro.domain.enums.DiscountType;
-import com.eventpro.dto.request.promotions.CreatePromotionRequest;
+import com.eventpro.dto.request.CreatePromotionRequest;
 import com.eventpro.entity.Event;
 import com.eventpro.entity.transactions.Promotion;
 import com.eventpro.exception.badrequest.ValidationException;

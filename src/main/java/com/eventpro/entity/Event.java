@@ -49,7 +49,6 @@ public class Event {
     private Organizer organizer;
 
     @OneToMany(mappedBy = "event")
-    // don't forget to enforce at least 1
     private List<EventTicketCategory> eventTicketCategories;
 
     @OneToMany(mappedBy = "event")

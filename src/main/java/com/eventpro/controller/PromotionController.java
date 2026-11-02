@@ -1,7 +1,7 @@
 package com.eventpro.controller;
 
-import com.eventpro.dto.request.promotions.CreatePromotionRequest;
-import com.eventpro.dto.request.promotions.PromotionResponse;
+import com.eventpro.dto.request.CreatePromotionRequest;
+import com.eventpro.dto.response.PromotionResponse;
 import com.eventpro.exception.badrequest.ValidationException;
 import com.eventpro.mapper.PromotionMapper;
 import com.eventpro.service.PromotionService;

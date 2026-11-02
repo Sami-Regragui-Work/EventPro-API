@@ -1,7 +1,7 @@
 package com.eventpro.mapper;
 
-import com.eventpro.dto.request.promotions.CreatePromotionRequest;
-import com.eventpro.dto.request.promotions.PromotionResponse;
+import com.eventpro.dto.request.CreatePromotionRequest;
+import com.eventpro.dto.response.PromotionResponse;
 import com.eventpro.entity.transactions.Promotion;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

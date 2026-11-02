@@ -1,4 +1,4 @@
-package com.eventpro.dto.request.promotions;
+package com.eventpro.dto.request;
 
 import com.eventpro.domain.enums.DiscountType;
 import jakarta.validation.constraints.DecimalMin;
