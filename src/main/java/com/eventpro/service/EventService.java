@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,7 @@ public class EventService {
     private final OrganizerRepository organizerRepository;
     private final EventTicketCategoryRepository eventTicketCategoryRepository;
     private final EventMapper mapper;
+    private final Clock clock;
 
     public Event create(Long organizerId, CreateEventRequest dto) throws ValidationException {
         Organizer organizer = this.organizerRepository.findById(organizerId)
@@ -59,14 +61,18 @@ public class EventService {
                 .override(dto.getStartDate(), dto.getEndDate(), dto.getSalesOpeningDate(), dto.getSalesClosingDate());
 
         this.mapper.updateEntity(dto, event);
+        this.completeIfPast(event, this.clock.instant());
         return event;
     }
 
     public Event publish(Long organizerId, Long eventId) {
         Event event = this.lockOwnedEvent(organizerId, eventId);
         event.assertCanTransitionTo(EventStatus.PUBLISHED);
-        if (!event.getSalesClosingDate().isAfter(Instant.now()))
+        if (!event.getSalesClosingDate().isAfter(this.clock.instant()))
             throw new IllegalEventStateException("Sales have already closed");
+
+        if (event.getEndDate() != null && !event.getEndDate().isAfter(this.clock.instant()))
+            throw new IllegalEventStateException("Event has already ended");
 
         if (this.eventTicketCategoryRepository.countByEventId(eventId) == 0)
             throw new IllegalEventStateException("Publish requires at least one ticket category");
@@ -83,7 +89,7 @@ public class EventService {
 
     @Transactional(readOnly = true)
     public Page<Event> findPublic(Pageable pageable) {
-        return this.eventRepository.findByStatusAndSalesClosingDateAfter(EventStatus.PUBLISHED, Instant.now(), pageable);
+        return this.eventRepository.findByStatusAndSalesClosingDateAfter(EventStatus.PUBLISHED, this.clock.instant(), pageable);
     }
 
     @Transactional(readOnly = true)
@@ -113,6 +119,20 @@ public class EventService {
         return EventService.checkOwner(organizerId, eventId, this.eventRepository.findWithLockById(eventId));
     }
 
+    public void completeIfOver(Long eventId) {
+        Event event = this.eventRepository.findWithLockById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event " + eventId + " not found"));
+        this.completeIfPast(event, this.clock.instant());
+    }
+
+    private void completeIfPast(Event event, Instant now) {
+        if (event.getStatus() != EventStatus.PUBLISHED)
+            return;
+        if (event.getEndDate() == null || event.getEndDate().isAfter(now))
+            return;
+        event.transitionTo(EventStatus.COMPLETED);
+    }
+
     private static Event checkOwner(Long organizerId, Long eventId, Optional<Event> found) {
         Event event = found.orElseThrow(() -> new ResourceNotFoundException("Event " + eventId + " not found"));
         if (!event.getOrganizer().getId().equals(organizerId)) {
@@ -125,7 +145,7 @@ public class EventService {
         List<String> changes = new ArrayList<>();
         if (EventService.isChanged(dto.getTitle(), event.getTitle())) changes.add("title");
         if (EventService.isChanged(dto.getStartDate(), event.getStartDate())) changes.add("startDate");
-        if (EventService.isChanged(dto.getEndDate(), event.getEndDate())) changes.add("endDate");
+//        if (EventService.isChanged(dto.getEndDate(), event.getEndDate())) changes.add("endDate");
         if (EventService.isChanged(dto.getSalesOpeningDate(), event.getSalesOpeningDate())) changes.add("salesOpeningDate");
         if (EventService.isChanged(dto.getSalesClosingDate(), event.getSalesClosingDate())) changes.add("salesClosingDate");
         if (EventService.isChanged(dto.getCapacity(), event.getCapacity())) changes.add("capacity");
