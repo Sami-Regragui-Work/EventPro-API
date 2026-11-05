@@ -75,4 +75,16 @@ public interface ReservationLineRepository extends JpaRepository<ReservationLine
             @Param("clientId") Long clientId,
             @Param("statuses") Collection<ReservationStatus> statuses
     );
+
+    @Query("""
+            SELECT rl.eventTicketCategory.event.id AS eventId,
+                   rl.eventTicketCategory.event.title AS title,
+                   COALESCE(SUM(rl.quantity), 0) AS ticketsSold,
+                   COALESCE(SUM(rl.subtotal), 0) AS revenue
+            FROM ReservationLine rl
+            WHERE rl.eventTicketCategory.event.organizer.id = :organizerId
+            AND rl.reservation.status = com.eventpro.domain.enums.ReservationStatus.CONFIRMED
+            GROUP BY rl.eventTicketCategory.event.id, rl.eventTicketCategory.event.title
+            """)
+    List<EventSalesProjection> sumSalesByOrganizerId(Long organizerId);
 }
