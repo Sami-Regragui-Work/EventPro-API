@@ -2,6 +2,7 @@ package com.eventpro.entity.transactions;
 
 import com.eventpro.domain.enums.PaymentStatus;
 import com.eventpro.entity.reservations.Reservation;
+import com.eventpro.exception.conflict.IllegalReservationStateException;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,10 +30,21 @@ public class Payment {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
+    @Setter(AccessLevel.NONE)
     private PaymentStatus status;
 
     @OneToOne(optional = false)
     private Reservation reservation;
 
 
+    public void assertCanTransitionTo(PaymentStatus desiredStatus) {
+        if (!this.status.canTransitionTo(desiredStatus)) {
+            throw new IllegalReservationStateException("Cannot change payment from %s to %s".formatted(this.status, desiredStatus));
+        }
+    }
+
+    public void transitionTo(PaymentStatus desiredStatus) {
+        this.assertCanTransitionTo(desiredStatus);
+        this.status = desiredStatus;
+    }
 }

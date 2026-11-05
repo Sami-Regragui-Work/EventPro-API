@@ -167,7 +167,7 @@ public class ReservationService {
         if (pendingPayment == null || pendingPayment.getStatus() != PaymentStatus.PENDING)
             return null;
 
-        pendingPayment.setStatus(PaymentStatus.FAILED);
+        pendingPayment.transitionTo(PaymentStatus.FAILED);
         return pendingPayment;
     }
 
