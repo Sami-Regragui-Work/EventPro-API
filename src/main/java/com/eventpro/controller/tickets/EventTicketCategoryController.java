@@ -6,6 +6,7 @@ import com.eventpro.dto.response.tickets.EventTicketCategoryResponse;
 import com.eventpro.exception.badrequest.ValidationException;
 import com.eventpro.mapper.EventTicketCategoryMapper;
 import com.eventpro.service.EventTicketCategoryService;
+import com.eventpro.service.EventTicketCategoryService.CategoryStock;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,7 +27,9 @@ public class EventTicketCategoryController {
             @PathVariable Long organizerId,
             @PathVariable Long eventId
     ) {
-        return this.service.list(organizerId, eventId).stream().map(this.mapper::toResponse).toList();
+        return this.service.list(organizerId, eventId).stream()
+                .map(stock -> this.mapper.toStockResponse(stock.category(), stock.reservedQuantity(), stock.soldQuantity(), stock.availableQuantity()))
+                .toList();
     }
 
     @PostMapping
@@ -49,7 +52,8 @@ public class EventTicketCategoryController {
             UpdateTicketCategoryRequest dto
     ) throws ValidationException
     {
-        return this.mapper.toResponse(this.service.update(organizerId, eventId, id, dto));
+        CategoryStock stock = this.service.update(organizerId, eventId, id, dto);
+        return this.mapper.toStockResponse(stock.category(), stock.reservedQuantity(), stock.soldQuantity(), stock.availableQuantity());
     }
 
     @DeleteMapping("/{id}")

@@ -24,4 +24,20 @@ public interface EventTicketCategoryMapper {
     @Mapping(target = "ticketCategory", ignore = true)
     @Mapping(target = "reservationLines", ignore = true)
     void updateEntity(UpdateTicketCategoryRequest dto, @MappingTarget EventTicketCategory eventTicketCategory);
+
+    @Mapping(target = "id", source = "eventTicketCategory.id")
+    @Mapping(target = "ticketCategoryId", source = "eventTicketCategory.ticketCategory.id")
+    @Mapping(target = "ticketCategoryName", source = "eventTicketCategory.ticketCategory.name")
+    @Mapping(target = "unitPrice", source = "eventTicketCategory.unitPrice")
+    @Mapping(target = "totalQuantity", source = "eventTicketCategory.totalQuantity")
+    @Mapping(target = "maxQuotaPerClient", source = "eventTicketCategory.maxQuotaPerClient")
+    @Mapping(target = "reservedQuantity", source = "reservedQuantity")
+    @Mapping(target = "soldQuantity", source = "soldQuantity")
+    @Mapping(target = "availableQuantity", source = "availableQuantity")
+    EventTicketCategoryResponse toStockResponse(
+            EventTicketCategory eventTicketCategory,
+            long reservedQuantity,
+            long soldQuantity,
+            long availableQuantity
+    );
 }

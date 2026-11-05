@@ -13,4 +13,6 @@ public class EventSummaryResponse {
     private final Instant startDate;
     private final Instant salesClosingDate;
     private final String organizerName;
+
+    private final long availableSeats;
 }

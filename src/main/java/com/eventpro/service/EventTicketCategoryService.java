@@ -35,10 +35,44 @@ public class EventTicketCategoryService {
     private final ReservationLineRepository reservationLineRepository;
     private final EventTicketCategoryMapper mapper;
 
+    public record CategoryStock(EventTicketCategory category, long reservedQuantity, long soldQuantity, long availableQuantity) {}
+
     @Transactional(readOnly = true)
-    public List<EventTicketCategory> list(Long organizerId, Long eventId) {
+    public List<CategoryStock> list(Long organizerId, Long eventId) {
         this.eventService.ownedEvent(organizerId, eventId);
-        return this.eventTicketCategoryRepository.findByEventId(eventId);
+        List<EventTicketCategory> categories = this.eventTicketCategoryRepository.findByEventId(eventId);
+
+        Map<Long, ReservationLineRepository.CategoryStockSum> sumsByCategoryId = new HashMap<>();
+        for (ReservationLineRepository.CategoryStockSum sum : this.reservationLineRepository
+                .sumStockByEventId(eventId, ReservationStatus.PENDING_PAYMENT, ReservationStatus.CONFIRMED, COMMITTED_STATUSES)) {
+            sumsByCategoryId.put(sum.getEventTicketCategoryId(), sum);
+        }
+
+        List<CategoryStock> stocks = new ArrayList<>();
+        for (EventTicketCategory category : categories) {
+            ReservationLineRepository.CategoryStockSum sum = sumsByCategoryId.get(category.getId());
+            long reserved = sum == null ? 0L : sum.getReservedQuantity();
+            long sold = sum == null ? 0L : sum.getSoldQuantity();
+            stocks.add(new CategoryStock(category, reserved, sold, category.getTotalQuantity() - reserved - sold));
+        }
+        return stocks;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, Long> availableSeatsByEventId(Collection<Long> eventIds) {
+        Map<Long, Long> availableByEventId = new HashMap<>();
+        if (eventIds.isEmpty())
+            return availableByEventId;
+
+        for (EventTicketCategoryRepository.EventTotalSum total : this.eventTicketCategoryRepository.sumTotalByEventIds(eventIds))
+            availableByEventId.put(total.getEventId(), total.getTotalQuantity());
+
+        for (ReservationLineRepository.EventStockSum committed : this.reservationLineRepository
+                .sumCommittedByEventIds(eventIds, COMMITTED_STATUSES)) {
+            availableByEventId.computeIfPresent(committed.getEventId(),
+                    (eventId, remaining) -> remaining - committed.getCommittedQuantity());
+        }
+        return availableByEventId;
     }
 
     public EventTicketCategory attach(Long organizerId, Long eventId, AttachTicketCategoryRequest dto) throws ValidationException {
@@ -64,7 +98,7 @@ public class EventTicketCategoryService {
         }
     }
 
-    public EventTicketCategory update(Long organizerId, Long eventId, Long eventCategoryId, UpdateTicketCategoryRequest dto) throws ValidationException {
+    public CategoryStock update(Long organizerId, Long eventId, Long eventCategoryId, UpdateTicketCategoryRequest dto) throws ValidationException {
         Event event = this.eventService.lockOwnedEvent(organizerId, eventId);
         event.requireModifiable();
 
@@ -98,7 +132,10 @@ public class EventTicketCategoryService {
 
         this.mapper.updateEntity(dto, eventCategory);
 
-        return eventCategory;
+        return this.list(organizerId, eventId).stream()
+                .filter(stock -> stock.category().getId().equals(eventCategoryId))
+                .findFirst()
+                .orElseThrow();
     }
 
     public void remove(Long organizerId, Long eventId, Long eventCategoryId) {

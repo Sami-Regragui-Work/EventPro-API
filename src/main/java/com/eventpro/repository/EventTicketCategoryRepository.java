@@ -8,10 +8,25 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 public interface EventTicketCategoryRepository extends JpaRepository<EventTicketCategory, Long> {
+    interface EventTotalSum {
+        Long getEventId();
+        Long getTotalQuantity();
+    }
+
+    @Query("""
+        SELECT etc.event.id AS eventId,
+               COALESCE(SUM(etc.totalQuantity), 0) AS totalQuantity
+        FROM EventTicketCategory etc
+        WHERE etc.event.id IN :eventIds
+        GROUP BY etc.event.id
+        """)
+    List<EventTotalSum> sumTotalByEventIds(@Param("eventIds") Collection<Long> eventIds);
+
     @EntityGraph(attributePaths = "ticketCategory")
     List<EventTicketCategory> findByEventId(Long eventId);
 

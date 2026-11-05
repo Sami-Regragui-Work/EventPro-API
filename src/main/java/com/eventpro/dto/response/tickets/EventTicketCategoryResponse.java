@@ -13,4 +13,8 @@ public class EventTicketCategoryResponse {
     private final BigDecimal unitPrice;
     private final int totalQuantity;
     private final int maxQuotaPerClient;
+
+    private final long reservedQuantity;
+    private final long soldQuantity;
+    private final long availableQuantity;
 }

@@ -29,4 +29,8 @@ public interface EventMapper {
     @Mapping(target = "eventTicketCategories", ignore = true)
     @Mapping(target = "promotions", ignore = true)
     void updateEntity(UpdateEventRequest dto, @MappingTarget Event event);
+
+    @Mapping(target = "organizerName", source = "event.organizer.name")
+    @Mapping(target = "availableSeats", source = "availableSeats")
+    EventSummaryResponse toSummaryResponse(Event event, long availableSeats);
 }
