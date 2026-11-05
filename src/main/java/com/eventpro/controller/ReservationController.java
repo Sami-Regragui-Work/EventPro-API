@@ -2,6 +2,7 @@ package com.eventpro.controller;
 
 import com.eventpro.dto.request.reservations.CreateReservationRequest;
 import com.eventpro.dto.response.reservations.ReservationResponse;
+import com.eventpro.entity.reservations.Reservation;
 import com.eventpro.exception.badrequest.ValidationException;
 import com.eventpro.mapper.ReservationMapper;
 import com.eventpro.service.ReservationService;
