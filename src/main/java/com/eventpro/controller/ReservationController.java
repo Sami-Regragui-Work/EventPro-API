@@ -39,4 +39,15 @@ public class ReservationController {
         Reservation reservation = this.service.getByReference(clientId, eventId, reference);
         return ResponseEntity.ok(this.mapper.toResponse(reservation));
     }
+
+    @PostMapping("/{reference}/cancel")
+    public ResponseEntity<ReservationResponse> cancel(
+        @PathVariable Long clientId,
+        @PathVariable Long eventId,
+        @PathVariable String reference
+    ) {
+        this.service.cancelByClient(clientId, eventId, reference);
+        Reservation refreshedReservation = this.service.getByReference(clientId, eventId, reference);
+        return ResponseEntity.ok(this.mapper.toResponse(refreshedReservation));
+    }
 }

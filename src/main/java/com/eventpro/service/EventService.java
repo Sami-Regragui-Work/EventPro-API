@@ -9,10 +9,13 @@ import com.eventpro.exception.badrequest.ValidationException;
 import com.eventpro.exception.conflict.IllegalEventStateException;
 import com.eventpro.mapper.EventMapper;
 import com.eventpro.entity.Event;
+import com.eventpro.entity.reservations.Reservation;
 import com.eventpro.entity.users.Organizer;
+import com.eventpro.domain.enums.ReservationStatus;
 import com.eventpro.repository.EventRepository;
 import com.eventpro.repository.EventTicketCategoryRepository;
 import com.eventpro.repository.OrganizerRepository;
+import com.eventpro.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +35,8 @@ public class EventService {
     private final EventRepository eventRepository;
     private final OrganizerRepository organizerRepository;
     private final EventTicketCategoryRepository eventTicketCategoryRepository;
+    private final ReservationRepository reservationRepository;
+    private final RefundService refundService;
     private final EventMapper mapper;
     private final Clock clock;
 
@@ -84,6 +89,15 @@ public class EventService {
     public Event cancel(Long organizerId, Long eventId) {
         Event event = this.lockOwnedEvent(organizerId, eventId);
         event.transitionTo(EventStatus.CANCELED);
+
+        for (Reservation pendingReservation : this.reservationRepository.findByEventIdAndStatus(eventId, ReservationStatus.PENDING_PAYMENT)) {
+            this.refundService.cancelPendingReservation(pendingReservation);
+        }
+
+        for (Reservation confirmedReservation : this.reservationRepository.findByEventIdAndStatus(eventId, ReservationStatus.CONFIRMED)) {
+            this.refundService.refundConfirmedReservation(confirmedReservation, this.clock.instant());
+        }
+
         return event;
     }
 

@@ -13,7 +13,9 @@ import com.eventpro.entity.transactions.Payment;
 import com.eventpro.entity.transactions.Promotion;
 import com.eventpro.entity.users.Client;
 import com.eventpro.exception.badrequest.ValidationException;
+import com.eventpro.exception.conflict.CancellationTooLateException;
 import com.eventpro.exception.conflict.IllegalEventStateException;
+import com.eventpro.exception.conflict.IllegalReservationStateException;
 import com.eventpro.exception.conflict.InsufficientStockException;
 import com.eventpro.exception.conflict.PromotionUnavailableException;
 import com.eventpro.exception.conflict.QuotaExceededException;
@@ -28,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -49,6 +52,7 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final ClientRepository clientRepository;
     private final ReservationLineRepository reservationLineRepository;
+    private final RefundService refundService;
     private final EventService eventService;
     private final Clock clock;
 
@@ -130,13 +134,27 @@ public class ReservationService {
     public Reservation getByReference(Long clientId, Long eventId, String reference) {
         Reservation reservation = this.reservationRepository.findByReference(reference)
                 .orElseThrow(() -> new ResourceNotFoundException("Reservation " + reference + " not found"));
+        ReservationService.checkOwnership(reservation, clientId, eventId, reference);
+        return reservation;
+    }
 
-        boolean belongsToClientAndEvent = reservation.getClient().getId().equals(clientId)
-                && reservation.getReservationLines().stream()
-                        .allMatch(reservationLine -> reservationLine.getEventTicketCategory().getEvent().getId().equals(eventId));
+    public Reservation cancelByClient(Long clientId, Long eventId, String reference) {
+        Reservation reservation = this.reservationRepository.findByReference(reference)
+                .orElseThrow(() -> new ResourceNotFoundException("Reservation " + reference + " not found"));
+        ReservationService.checkOwnership(reservation, clientId, eventId, reference);
+        Instant now = this.clock.instant();
 
-        if (!belongsToClientAndEvent) {
-            throw new ResourceNotFoundException("Reservation " + reference + " not found");
+        switch (reservation.getStatus()) {
+            case CONFIRMED -> {
+                Instant eventStartDate = reservation.getReservationLines().getFirst().getEventTicketCategory().getEvent().getStartDate();
+                boolean startsTwoDaysAheadOrLater = Duration.between(now, eventStartDate).compareTo(Duration.ofHours(48)) >= 0;
+                if (!startsTwoDaysAheadOrLater)
+                    throw new CancellationTooLateException();
+
+                this.refundService.refundConfirmedReservation(reservation, now);
+            }
+            case PENDING_PAYMENT -> this.refundService.cancelPendingReservation(reservation);
+            default -> throw new IllegalReservationStateException();
         }
 
         return reservation;
@@ -169,6 +187,15 @@ public class ReservationService {
 
         pendingPayment.transitionTo(PaymentStatus.FAILED);
         return pendingPayment;
+    }
+
+    private static void checkOwnership(Reservation reservation, Long clientId, Long eventId, String reference) {
+        boolean belongsToClientAndEvent = reservation.getClient().getId().equals(clientId)
+                && reservation.getReservationLines().stream()
+                        .allMatch(reservationLine -> reservationLine.getEventTicketCategory().getEvent().getId().equals(eventId));
+
+        if (!belongsToClientAndEvent)
+            throw new ResourceNotFoundException("Reservation " + reference + " not found");
     }
 
     private void checkStock(EventTicketCategory eventTicketCategory, int requestedQuantity) {
