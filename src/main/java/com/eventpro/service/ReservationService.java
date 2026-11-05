@@ -1,6 +1,7 @@
 package com.eventpro.service;
 
 import com.eventpro.domain.CodeGenerator;
+import com.eventpro.domain.enums.PaymentStatus;
 import com.eventpro.domain.enums.ReservationStatus;
 import com.eventpro.dto.request.reservations.CreateReservationRequest;
 import com.eventpro.dto.request.reservations.ReservationLineRequest;
@@ -8,6 +9,7 @@ import com.eventpro.entity.Event;
 import com.eventpro.entity.reservations.Reservation;
 import com.eventpro.entity.reservations.ReservationLine;
 import com.eventpro.entity.tickets.EventTicketCategory;
+import com.eventpro.entity.transactions.Payment;
 import com.eventpro.entity.transactions.Promotion;
 import com.eventpro.entity.users.Client;
 import com.eventpro.exception.badrequest.ValidationException;
@@ -149,12 +151,24 @@ public class ReservationService {
 
         reservation.transitionTo(ReservationStatus.EXPIRED);
 
+        this.expirePendingPayment(reservation);
+
         Promotion appliedPromotion = reservation.getPromotion();
         if (appliedPromotion != null) {
             Promotion lockedPromotion = this.promotionRepository.findWithLockById(appliedPromotion.getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Promotion " + appliedPromotion.getId() + " not found"));
             lockedPromotion.releaseUsage();
         }
+    }
+
+    private Payment expirePendingPayment(Reservation reservation) {
+        Payment pendingPayment = reservation.getPayment();
+
+        if (pendingPayment == null || pendingPayment.getStatus() != PaymentStatus.PENDING)
+            return null;
+
+        pendingPayment.setStatus(PaymentStatus.FAILED);
+        return pendingPayment;
     }
 
     private void checkStock(EventTicketCategory eventTicketCategory, int requestedQuantity) {
