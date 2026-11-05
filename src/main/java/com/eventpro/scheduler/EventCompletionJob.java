@@ -21,7 +21,7 @@ public class EventCompletionJob {
     private final EventService eventService;
     private final Clock clock;
 
-    @Scheduled(fixedDelay = 3_600_000)
+    @Scheduled(fixedDelay = 60_000)
     public void completeOverEvents() {
         List<Long> eventIds = this.eventRepository
                 .findIdsByStatusAndEndDateBefore(EventStatus.PUBLISHED, this.clock.instant());
