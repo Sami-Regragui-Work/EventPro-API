@@ -31,6 +31,7 @@ public class PaymentService {
 
     private final ReservationRepository reservationRepository;
     private final PaymentRepository paymentRepository;
+    private final TicketService ticketService;
     private final Clock clock;
 
     public Payment initiate(Long clientId, Long eventId, String reference) {
@@ -66,8 +67,10 @@ public class PaymentService {
         if (reservation.isExpiredAt(this.clock.instant()))
             throw new ReservationExpiredException();
 
+        Instant now = this.clock.instant();
         payment.transitionTo(PaymentStatus.SUCCESS);
         reservation.transitionTo(ReservationStatus.CONFIRMED);
+        this.ticketService.issueTickets(reservation, now);
         return payment;
     }
 
