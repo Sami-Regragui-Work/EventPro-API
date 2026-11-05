@@ -1,5 +1,6 @@
 package com.eventpro.service;
 
+import com.eventpro.domain.CodeGenerator;
 import com.eventpro.domain.enums.ReservationStatus;
 import com.eventpro.dto.request.reservations.CreateReservationRequest;
 import com.eventpro.dto.request.reservations.ReservationLineRequest;
@@ -24,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -38,11 +38,9 @@ public class ReservationService {
     private static final Set<ReservationStatus> COMMITTED_STATUSES = EnumSet.of(ReservationStatus.PENDING_PAYMENT, ReservationStatus.CONFIRMED);
 
     private static final String REFERENCE_PREFIX = "RSV-";
-    private static final String REFERENCE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final int REFERENCE_LENGTH = 10;
     private static final int MAX_REFERENCE_ATTEMPTS = 5;
     private static final long RESERVATION_MINUTES = 10;
-    private static final SecureRandom RANDOM = new SecureRandom();
 
     private final EventTicketCategoryRepository eventTicketCategoryRepository;
     private final PromotionRepository promotionRepository;
@@ -176,7 +174,7 @@ public class ReservationService {
         int attempt = ReservationService.MAX_REFERENCE_ATTEMPTS;
 
         while (attempt > 0) {
-            String reference = ReservationService.REFERENCE_PREFIX + ReservationService.randomSuffix();
+            String reference = CodeGenerator.randomCode(ReservationService.REFERENCE_PREFIX, ReservationService.REFERENCE_LENGTH);
             if (!this.reservationRepository.existsByReference(reference)) {
                 return reference;
             }
@@ -184,20 +182,5 @@ public class ReservationService {
             attempt--;
         }
         throw new SystemException("Could not generate a unique reservation reference");
-    }
-
-    private static String randomSuffix() {
-        StringBuilder suffix = new StringBuilder(ReservationService.REFERENCE_LENGTH);
-
-        int currentLength = ReservationService.REFERENCE_LENGTH;
-
-        while (currentLength > 0) {
-            suffix.append(ReservationService.REFERENCE_ALPHABET.charAt(
-                    ReservationService.RANDOM.nextInt(ReservationService.REFERENCE_ALPHABET.length())));
-
-            currentLength--;
-        }
-
-        return suffix.toString();
     }
 }

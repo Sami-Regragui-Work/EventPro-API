@@ -1,5 +1,6 @@
 package com.eventpro.service;
 
+import com.eventpro.domain.CodeGenerator;
 import com.eventpro.domain.enums.DiscountType;
 import com.eventpro.dto.request.CreatePromotionRequest;
 import com.eventpro.entity.Event;
@@ -16,17 +17,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.security.SecureRandom;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(rollbackFor = Exception.class)
 public class PromotionService {
-    private static final String ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final int CODE_LENGTH = 8;
     private static final int MAX_ATTEMPTS = 5;
-    private static final SecureRandom RANDOM = new SecureRandom();
 
     private final EventService eventService;
     private final PromotionRepository repository;
@@ -81,19 +79,11 @@ public class PromotionService {
 
     private String generateUniqueCode(Long eventId) {
         for (int attempt = 0; attempt < PromotionService.MAX_ATTEMPTS; attempt++) {
-            String code = "PROMO-" + PromotionService.randomSuffix();
+            String code = CodeGenerator.randomCode("PROMO-", PromotionService.CODE_LENGTH);
             if (!this.repository.existsByEventIdAndCode(eventId, code)) {
                 return code;
             }
         }
         throw new SystemException("Could not generate a unique promotion code");
-    }
-
-    private static String randomSuffix() {
-        StringBuilder suffix = new StringBuilder(PromotionService.CODE_LENGTH);
-        for (int i = 0; i < PromotionService.CODE_LENGTH; i++) {
-            suffix.append(PromotionService.ALPHABET.charAt(RANDOM.nextInt(PromotionService.ALPHABET.length())));
-        }
-        return suffix.toString();
     }
 }
