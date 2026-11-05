@@ -124,6 +124,22 @@ public class ReservationService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public Reservation getByReference(Long clientId, Long eventId, String reference) {
+        Reservation reservation = this.reservationRepository.findByReference(reference)
+                .orElseThrow(() -> new ResourceNotFoundException("Reservation " + reference + " not found"));
+
+        boolean belongsToClientAndEvent = reservation.getClient().getId().equals(clientId)
+                && reservation.getReservationLines().stream()
+                        .allMatch(reservationLine -> reservationLine.getEventTicketCategory().getEvent().getId().equals(eventId));
+
+        if (!belongsToClientAndEvent) {
+            throw new ResourceNotFoundException("Reservation " + reference + " not found");
+        }
+
+        return reservation;
+    }
+
     public void expire(Long reservationId) {
         Reservation reservation = this.reservationRepository.findWithLockById(reservationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Reservation " + reservationId + " not found"));

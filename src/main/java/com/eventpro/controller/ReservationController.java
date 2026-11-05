@@ -28,4 +28,14 @@ public class ReservationController {
     {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.mapper.toResponse(this.service.create(clientId, eventId, dto)));
     }
+
+    @GetMapping("/{reference}")
+    public ResponseEntity<ReservationResponse> getByReference(
+        @PathVariable Long clientId,
+        @PathVariable Long eventId,
+        @PathVariable String reference
+    ) {
+        Reservation reservation = this.service.getByReference(clientId, eventId, reference);
+        return ResponseEntity.ok(this.mapper.toResponse(reservation));
+    }
 }
