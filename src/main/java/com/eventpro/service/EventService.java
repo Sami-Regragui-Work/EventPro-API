@@ -87,6 +87,17 @@ public class EventService {
         return event;
     }
 
+    public Event end(Long organizerId, Long eventId) throws ValidationException {
+        Event event = this.lockOwnedEvent(organizerId, eventId);
+        event.assertCanTransitionTo(EventStatus.COMPLETED);
+
+        if (event.getStartDate().isAfter(this.clock.instant()))
+            throw new ValidationException("Event has not started yet");
+
+        event.setEndDate(this.clock.instant());
+        return event;
+    }
+
     @Transactional(readOnly = true)
     public Page<Event> findPublic(Pageable pageable) {
         return this.eventRepository.findByStatusAndSalesClosingDateAfter(EventStatus.PUBLISHED, this.clock.instant(), pageable);

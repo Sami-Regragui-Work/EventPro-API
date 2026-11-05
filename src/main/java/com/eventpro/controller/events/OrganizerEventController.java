@@ -68,4 +68,12 @@ public class OrganizerEventController {
     ) {
         return this.mapper.toResponse(this.service.cancel(organizerId, eventId));
     }
+
+    @PostMapping("/{eventId}/end")
+    public EventResponse end(
+            @PathVariable Long organizerId,
+            @PathVariable Long eventId
+    ) throws ValidationException {
+        return this.mapper.toResponse(this.service.end(organizerId, eventId));
+    }
 }
