@@ -34,6 +34,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     boolean existsByReference(String reference);
 
+    boolean existsByPromotionId(Long promotionId);
+
     @EntityGraph(attributePaths = "promotion")
     List<Reservation> findByStatusAndExpirationDateLessThanEqual(ReservationStatus status, Instant now);
 }

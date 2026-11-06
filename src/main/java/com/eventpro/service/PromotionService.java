@@ -11,6 +11,7 @@ import com.eventpro.exception.internalservererror.SystemException;
 import com.eventpro.exception.notfound.ResourceNotFoundException;
 import com.eventpro.mapper.PromotionMapper;
 import com.eventpro.repository.PromotionRepository;
+import com.eventpro.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ public class PromotionService {
 
     private final EventService eventService;
     private final PromotionRepository repository;
+    private final ReservationRepository reservationRepository;
     private final PromotionMapper mapper;
 
     @Transactional(readOnly = true)
@@ -64,6 +66,15 @@ public class PromotionService {
         if (promotion.getUsageCount() > 0) {
             throw new PromotionInUseException();
         }
+
+        // Usage counters are released when reservations close, so a spent promotion can
+        // still be referenced from reservations (audit history). Refuse the delete then:
+        // the database FK on reservations.promotion_id would otherwise make the delete
+        // fail as an unmapped 500.
+        if (this.reservationRepository.existsByPromotionId(promotion.getId())) {
+            throw new PromotionInUseException("Promotion " + promotionId + " is attached to reservations and cannot be deleted");
+        }
+
         this.repository.delete(promotion);
     }
 
