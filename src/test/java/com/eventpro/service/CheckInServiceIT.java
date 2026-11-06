@@ -11,8 +11,10 @@ import com.eventpro.entity.tickets.EventTicketCategory;
 import com.eventpro.entity.tickets.Ticket;
 import com.eventpro.entity.tickets.TicketCategory;
 import com.eventpro.entity.users.Client;
+import com.eventpro.entity.users.ControlAgent;
 import com.eventpro.entity.users.Organizer;
 import com.eventpro.exception.conflict.TicketAlreadyUsedException;
+import com.eventpro.exception.notfound.ResourceNotFoundException;
 import com.eventpro.repository.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -48,6 +51,7 @@ class CheckInServiceIT {
     @Autowired EventRepository eventRepository;
     @Autowired OrganizerRepository organizerRepository;
     @Autowired ClientRepository clientRepository;
+    @Autowired ControlAgentRepository controlAgentRepository;
     @Autowired TicketCategoryRepository ticketCategoryRepository;
     @Autowired PaymentRepository paymentRepository;
     @Autowired RefundRepository refundRepository;
@@ -67,18 +71,21 @@ class CheckInServiceIT {
         this.promotionRepository.deleteAllInBatch();
         this.clientRepository.deleteAllInBatch();
         this.organizerRepository.deleteAllInBatch();
+        this.controlAgentRepository.deleteAllInBatch();
     }
 
     @Test
     void concurrentScansOnlyOneSucceeds() throws Exception {
         CheckInServiceIT.Fixture fixture = this.fixture("scanRace", 2);
+        ControlAgent agent = this.agent("scanRace");
 
         ExecutorService executor = Executors.newFixedThreadPool(2);
         List<Future<CheckInServiceIT.ScanOutcome>> pendingOutcomes = new ArrayList<>();
         for (int scannerNumber = 0; scannerNumber < 2; scannerNumber++) {
             pendingOutcomes.add(executor.submit((Callable<CheckInServiceIT.ScanOutcome>) () -> {
                 try {
-                    return new CheckInServiceIT.ScanOutcome(this.checkInService.scan(fixture.tickets().getFirst().getCode()), null);
+                    return new CheckInServiceIT.ScanOutcome(
+                            this.checkInService.scan(agent.getId(), fixture.tickets().getFirst().getCode()), null);
                 } catch (RuntimeException scanFailure) {
                     return new CheckInServiceIT.ScanOutcome(null, scanFailure);
                 }
@@ -109,8 +116,23 @@ class CheckInServiceIT {
 
     @Test
     void unknownCodeIsAMiss() {
-        assertThrows(com.eventpro.exception.notfound.ResourceNotFoundException.class,
-                () -> this.checkInService.scan("TKT-" + CodeGenerator.randomCode("", 10)));
+        ControlAgent agent = this.agent("unknownCode");
+        assertThrows(ResourceNotFoundException.class,
+                () -> this.checkInService.scan(agent.getId(), "TKT-" + CodeGenerator.randomCode("", 10)));
+    }
+
+    @Test
+    void unknownAgentLeavesTicketUntouched() {
+        CheckInServiceIT.Fixture fixture = this.fixture("unknownAgent", 1);
+        Ticket ticket = fixture.tickets().getFirst();
+
+        ResourceNotFoundException failure = assertThrows(ResourceNotFoundException.class,
+                () -> this.checkInService.scan(Long.MAX_VALUE, ticket.getCode()));
+        assertEquals("Agent " + Long.MAX_VALUE + " not found", failure.getMessage());
+
+        Ticket reloadedTicket = this.ticketRepository.findById(ticket.getId()).orElseThrow();
+        assertEquals(TicketStatus.VALID, reloadedTicket.getStatus());
+        assertNull(reloadedTicket.getScanDate());
     }
 
     private CheckInServiceIT.Fixture fixture(String label, int ticketCount) {
@@ -177,6 +199,14 @@ class CheckInServiceIT {
         }
 
         return new CheckInServiceIT.Fixture(suffix, reservation, reservationLine, tickets);
+    }
+
+    private ControlAgent agent(String label) {
+        String suffix = label + "-" + UUID.randomUUID();
+        return this.controlAgentRepository.save(ControlAgent.builder()
+                .name("Agent " + label)
+                .email("agent-" + suffix + "@it.eventpro.dev")
+                .build());
     }
 
     private String uniqueTicketCode() {

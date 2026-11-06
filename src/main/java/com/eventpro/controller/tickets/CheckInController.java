@@ -8,21 +8,22 @@ import com.eventpro.service.CheckInService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/checkin")
+@RequestMapping("/api/agents/{agentId}/checkin")
 @RequiredArgsConstructor
 public class CheckInController {
     private final CheckInService service;
     private final TicketMapper mapper;
 
     @PostMapping("/scan")
-    public ResponseEntity<TicketResponse> scan(@Valid @RequestBody ScanTicketRequest dto) {
-        Ticket ticket = this.service.scan(dto.getCode());
+    public ResponseEntity<TicketResponse> scan(
+            @PathVariable Long agentId,
+            @Valid @RequestBody
+            ScanTicketRequest dto
+    ) {
+        Ticket ticket = this.service.scan(agentId, dto.getCode());
         return ResponseEntity.ok(this.mapper.toResponse(ticket));
     }
 }

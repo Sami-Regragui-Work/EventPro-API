@@ -25,6 +25,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(CheckInController.class)
 class CheckInControllerTest {
 
+    private static final String SCAN_PATH = "/api/agents/1/checkin/scan";
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -45,10 +47,10 @@ class CheckInControllerTest {
     @Test
     void scanReturns200WithScannedTicket() throws Exception {
         Ticket ticket = this.ticket();
-        given(this.service.scan("TKT-B3C9D2")).willReturn(ticket);
+        given(this.service.scan(1L, "TKT-B3C9D2")).willReturn(ticket);
         given(this.mapper.toResponse(ticket)).willReturn(this.response(TicketStatus.USED));
 
-        this.mockMvc.perform(post("/api/checkin/scan")
+        this.mockMvc.perform(post(SCAN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"code\":\"TKT-B3C9D2\"}"))
                 .andExpect(status().isOk())
@@ -58,36 +60,38 @@ class CheckInControllerTest {
 
     @Test
     void scanWithBlankCodeReturns400WithFieldErrors() throws Exception {
-        this.mockMvc.perform(post("/api/checkin/scan")
+        this.mockMvc.perform(post(SCAN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"code\":\"\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
                 .andExpect(jsonPath("$.message").value("Validation failed"))
-                .andExpect(jsonPath("$.path").value("/api/checkin/scan"))
+                .andExpect(jsonPath("$.path").value(SCAN_PATH))
                 .andExpect(jsonPath("$.fieldErrors.code").value("Ticket code is required"));
     }
 
     @Test
     void scanWhenTicketAlreadyUsedReturns409Shape() throws Exception {
-        willThrow(new TicketAlreadyUsedException("Ticket TKT-B3C9D2 already used")).given(this.service).scan(any());
+        willThrow(new TicketAlreadyUsedException("Ticket TKT-B3C9D2 already used"))
+                .given(this.service).scan(any(), any());
 
-        this.mockMvc.perform(post("/api/checkin/scan")
+        this.mockMvc.perform(post(SCAN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"code\":\"TKT-B3C9D2\"}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.error").value("Conflict"))
                 .andExpect(jsonPath("$.message").value("Ticket TKT-B3C9D2 already used"))
-                .andExpect(jsonPath("$.path").value("/api/checkin/scan"));
+                .andExpect(jsonPath("$.path").value(SCAN_PATH));
     }
 
     @Test
     void scanWhenTicketCancelledReturns409Shape() throws Exception {
-        willThrow(new TicketCancelledException("Ticket TKT-B3C9D2 is cancelled")).given(this.service).scan(any());
+        willThrow(new TicketCancelledException("Ticket TKT-B3C9D2 is cancelled"))
+                .given(this.service).scan(any(), any());
 
-        this.mockMvc.perform(post("/api/checkin/scan")
+        this.mockMvc.perform(post(SCAN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"code\":\"TKT-B3C9D2\"}"))
                 .andExpect(status().isConflict())
@@ -97,15 +101,30 @@ class CheckInControllerTest {
 
     @Test
     void scanWhenCodeUnknownReturns404Shape() throws Exception {
-        willThrow(new ResourceNotFoundException("Ticket TKT-MISSING not found")).given(this.service).scan(any());
+        willThrow(new ResourceNotFoundException("Ticket TKT-MISSING not found"))
+                .given(this.service).scan(any(), any());
 
-        this.mockMvc.perform(post("/api/checkin/scan")
+        this.mockMvc.perform(post(SCAN_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"code\":\"TKT-MISSING\"}"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.error").value("Not Found"))
                 .andExpect(jsonPath("$.message").value("Ticket TKT-MISSING not found"))
-                .andExpect(jsonPath("$.path").value("/api/checkin/scan"));
+                .andExpect(jsonPath("$.path").value(SCAN_PATH));
+    }
+
+    @Test
+    void scanWhenAgentUnknownReturns404Shape() throws Exception {
+        willThrow(new ResourceNotFoundException("Agent 1 not found"))
+                .given(this.service).scan(any(), any());
+
+        this.mockMvc.perform(post(SCAN_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"code\":\"TKT-B3C9D2\"}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message").value("Agent 1 not found"))
+                .andExpect(jsonPath("$.path").value(SCAN_PATH));
     }
 }
