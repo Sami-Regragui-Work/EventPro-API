@@ -102,7 +102,6 @@ class EventTicketCategoryServiceIT {
                 }
             }));
         }
-
         executor.shutdown();
         assertTrue(executor.awaitTermination(30, TimeUnit.SECONDS));
 
@@ -127,5 +126,5 @@ class EventTicketCategoryServiceIT {
         assertEquals(1, storedAttachments.size());
     }
 
-    private record AttachOutcome(com.eventpro.entity.tickets.EventTicketCategory attachment, RuntimeException failure) {}
+    private record AttachOutcome(EventTicketCategoryService.CategoryStock attachment, RuntimeException failure) {}
 }

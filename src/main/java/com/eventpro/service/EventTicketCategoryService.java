@@ -75,7 +75,7 @@ public class EventTicketCategoryService {
         return availableByEventId;
     }
 
-    public EventTicketCategory attach(Long organizerId, Long eventId, AttachTicketCategoryRequest dto) throws ValidationException {
+    public EventTicketCategoryService.CategoryStock attach(Long organizerId, Long eventId, AttachTicketCategoryRequest dto) throws ValidationException {
         Event event = this.eventService.lockOwnedEvent(organizerId, eventId);
         EventTicketCategoryService.requireDraft(event, "Categories can only be attached while the event is DRAFT");
 
@@ -92,10 +92,16 @@ public class EventTicketCategoryService {
         eventCategory.setTicketCategory(ticketCategory);
 
         try {
-            return this.eventTicketCategoryRepository.saveAndFlush(eventCategory);
+            eventCategory = this.eventTicketCategoryRepository.saveAndFlush(eventCategory);
         } catch (DataIntegrityViolationException raceLost) {
             throw new DuplicateTicketCategoryException();
         }
+
+        // A freshly attached category has no reservations yet: nothing is reserved or
+        // sold, so the available quantity is the whole stock. Attach has to answer with
+        // the derived stock shape instead of raw entity fields (an unmapped
+        // availableQuantity previously serialized as 0, reading as "sold out").
+        return new EventTicketCategoryService.CategoryStock(eventCategory, 0L, 0L, eventCategory.getTotalQuantity());
     }
 
     public CategoryStock update(Long organizerId, Long eventId, Long eventCategoryId, UpdateTicketCategoryRequest dto) throws ValidationException {

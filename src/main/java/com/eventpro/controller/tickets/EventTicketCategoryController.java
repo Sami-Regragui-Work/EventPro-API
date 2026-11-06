@@ -40,7 +40,9 @@ public class EventTicketCategoryController {
             AttachTicketCategoryRequest dto
     ) throws ValidationException
     {
-        return ResponseEntity.status(HttpStatus.CREATED).body(this.mapper.toResponse(this.service.attach(organizerId, eventId, dto)));
+        EventTicketCategoryService.CategoryStock stock = this.service.attach(organizerId, eventId, dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                this.mapper.toStockResponse(stock.category(), stock.reservedQuantity(), stock.soldQuantity(), stock.availableQuantity()));
     }
 
     @PatchMapping("/{id}")

@@ -60,15 +60,21 @@ class EventTicketCategoryControllerTest {
     @Test
     void attachReturns201WithMappedCategory() throws Exception {
         EventTicketCategory category = this.category();
-        given(this.service.attach(eq(1L), eq(1L), any())).willReturn(category);
-        given(this.mapper.toResponse(category)).willReturn(this.response());
+        given(this.service.attach(eq(1L), eq(1L), any()))
+                .willReturn(new EventTicketCategoryService.CategoryStock(category, 0L, 0L, 100L));
+        given(this.mapper.toStockResponse(eq(category), eq(0L), eq(0L), eq(100L)))
+                .willReturn(EventTicketCategoryResponse.builder()
+                        .id(10L).ticketCategoryId(1L).ticketCategoryName("VIP")
+                        .unitPrice(new BigDecimal("50.00"))
+                        .totalQuantity(100).maxQuotaPerClient(4)
+                        .reservedQuantity(0L).soldQuantity(0L).availableQuantity(100L).build());
 
         this.mockMvc.perform(post("/api/organizers/1/events/1/ticket-categories")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"VIP\",\"unitPrice\":50,\"totalQuantity\":100,\"maxQuotaPerClient\":4}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.ticketCategoryName").value("VIP"))
-                .andExpect(jsonPath("$.availableQuantity").value(85));
+                .andExpect(jsonPath("$.availableQuantity").value(100));
     }
 
     @Test
