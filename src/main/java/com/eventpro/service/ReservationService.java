@@ -22,6 +22,8 @@ import com.eventpro.exception.conflict.QuotaExceededException;
 import com.eventpro.exception.internalservererror.SystemException;
 import com.eventpro.exception.notfound.ResourceNotFoundException;
 import com.eventpro.repository.*;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -55,6 +57,9 @@ public class ReservationService {
     private final RefundService refundService;
     private final EventService eventService;
     private final Clock clock;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public Reservation create(Long clientId, Long eventId, CreateReservationRequest dto) throws ValidationException {
         Event event = this.eventService.findWithLockPublicById(eventId);
@@ -157,7 +162,15 @@ public class ReservationService {
             default -> throw new IllegalReservationStateException();
         }
 
-        return reservation;
+        // The refund committed in its own transaction (REQUIRES_NEW), so the entity this
+        // transaction still holds answered with the pre-cancel status. Usually the endpoint
+        // re-reads through a shared persistence context in the same request, which would
+        // serve exactly that stale cached copy; dropping the context first makes the
+        // re-read hit the committed database state.
+        this.entityManager.clear();
+
+        return this.reservationRepository.findByReference(reference)
+                .orElseThrow(() -> new ResourceNotFoundException("Reservation " + reference + " not found"));
     }
 
     public void expire(Long reservationId) {
